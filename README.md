@@ -321,7 +321,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**Made with ❤️ by the Awesom-Technology-Scanner team**
+**Made with ❤️ by Rohit Mandal**
 
 [⬆ Back to top](#-awesom-technology-scanner)
 
