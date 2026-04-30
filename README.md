@@ -175,6 +175,8 @@ python3 scanner.py https://example.com --no-cache
 
 ### Setting Environment Variables
 
+**NOTE:** Create '.env' file and paste the followings:
+
 **Linux/Mac:**
 ```bash
 export GOOGLE_API_KEY="your-api-key"
