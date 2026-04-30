@@ -68,6 +68,9 @@ class WappalyzerDetector(Detector):
         # Detect common frameworks from HTML structure
         technologies.extend(self._detect_frameworks(soup))
 
+        # Detect Priority Hints
+        technologies.extend(self._detect_priority_hints(soup))
+
         return technologies
 
     def _detect_from_headers(self, headers: dict) -> List[Technology]:
@@ -86,6 +89,15 @@ class WappalyzerDetector(Detector):
             tech = self._parse_powered_by(powered_by)
             if tech:
                 technologies.append(tech)
+
+        # Detect HTTP/3 from alt-svc header
+        alt_svc = headers.get('alt-svc', '')
+        if alt_svc and 'h3' in alt_svc.lower():
+            technologies.append(Technology('HTTP/3'))
+
+        # Detect Google Web Server from server header
+        if server and 'gws' in server.lower():
+            technologies.append(Technology('Google Web Server'))
 
         return technologies
 
@@ -159,6 +171,19 @@ class WappalyzerDetector(Detector):
             version = self._extract_version(src)
             return Technology('Moment.js', version)
 
+        # Detect Google Closure Library
+        if 'closure' in src_lower or 'goog' in src_lower:
+            version = self._extract_version(src)
+            return Technology('Closure Library', version)
+
+        # Detect Google Analytics
+        if 'analytics' in src_lower or 'ga.js' in src_lower:
+            return Technology('Google Analytics')
+
+        # Detect Google Tag Manager
+        if 'gtm' in src_lower or 'googletagmanager' in src_lower:
+            return Technology('Google Tag Manager')
+
         return None
 
     def _parse_script_content(self, content: str) -> Optional[Technology]:
@@ -195,6 +220,23 @@ class WappalyzerDetector(Detector):
 
         return None
 
+    def _detect_priority_hints(self, soup) -> List[Technology]:
+        technologies = []
+
+        # Detect Priority Hints from link tags with rel attributes
+        for link in soup.find_all('link'):
+            rel = link.get('rel', [])
+            if isinstance(rel, str):
+                rel = [rel]
+
+            # Check for priority hint rel values
+            priority_hints = ['preload', 'prefetch', 'preconnect', 'prerender', 'dns-prefetch']
+            if any(hint in rel for hint in priority_hints):
+                technologies.append(Technology('Priority Hints'))
+                break
+
+        return technologies
+
     def _detect_frameworks(self, soup) -> List[Technology]:
         technologies = []
 
@@ -220,6 +262,8 @@ class WappalyzerDetector(Detector):
             'apache': 'Apache',
             'iis': 'IIS',
             'cloudflare': 'Cloudflare',
+            'gws': 'Google Web Server',
+            'gse': 'Google Search Engine',
         }
 
         for key, name in servers.items():
